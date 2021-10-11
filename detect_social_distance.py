@@ -119,7 +119,7 @@ def social_distancing_thread(output, video=0, show_frame=1):
         frame_resized = cv2.resize(frame_rgb, (frame_width, frame_height), interpolation=cv2.INTER_LINEAR)
         detect = detect_people(frame_resized, net, ln, personIdx=LABELS.index("person"))
         image = plotImg(detect, frame_resized)
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
         # display frame
         if show_frame > 0:
@@ -145,7 +145,7 @@ def social_distancing_thread(output, video=0, show_frame=1):
     print("[INFO] Approx. FPS: {:.2f}".format(fps.fps()))
 
 if __name__ == "__main__":
-    social_distancing(video='mask1.avi', show_frame=1,
-                      output='test_output_cv.avi')
-    # social_distancing_thread(video='mask1.avi', show_frame=1,
-    #                          output='test_output_thread.avi')
+    # social_distancing(video=0, show_frame=1,
+    #                   output='test_output_cv.avi')
+    social_distancing_thread(video=0, show_frame=1,
+                             output='test_output_thread.avi')
