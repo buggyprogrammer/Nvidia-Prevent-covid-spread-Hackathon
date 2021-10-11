@@ -27,7 +27,7 @@ def cal_distance(p1, p2):
     dist = np.sqrt(x_dist**2 + y_dist**2) 
     return dist
 
-def detect_people(frame, net, ln, personIdx=0):
+def detect_people(frame, net, ln, personIdx=0, min_conf=MIN_CONF, nms_thre=NMS_THRESH):
     """Function for detecting person in a frame.
        it will return detected person's coordinates with its centroid """
     # grab the dimensions of the frame and initialize the list of
@@ -53,7 +53,7 @@ def detect_people(frame, net, ln, personIdx=0):
             classID = np.argmax(scores)
             confidence = scores[classID]
 
-            if classID == personIdx and confidence > MIN_CONF:
+            if classID == personIdx and confidence > min_conf:
                 # scale the bounding box coordinates back 
                 box = detection[0:4] * np.array([W, H, W, H])
                 (centerX, centerY, width, height) = box.astype("int")
@@ -68,7 +68,7 @@ def detect_people(frame, net, ln, personIdx=0):
                 confidences.append(float(confidence))
         
     # apply non-maxima suppression to suppress weak, overlapping bounding boxes
-    idxs = cv2.dnn.NMSBoxes(boxes, confidences, MIN_CONF, NMS_THRESH)
+    idxs = cv2.dnn.NMSBoxes(boxes, confidences, min_conf, nms_thre)
 
     # ensure at least one detection exists
     if len(idxs) > 0:
@@ -84,27 +84,53 @@ def detect_people(frame, net, ln, personIdx=0):
 
     return centroid_dict
 
-def violation(centroid_dict):
+def violation(centroid_dict, min_dist= MIN_DISTANCE):
     """This function calculate if two or more person is
        closer than threshold distance"""
     red_zone = {} # List containing which Object id is in under threshold distance condition. 
     yellow_zone = {}
     for (id1, p1), (id2, p2) in combinations(centroid_dict.items(), 2): # Get all the combinations of close detections
         distance = cal_distance(p1, p2) 			# Calculates the Euclidean distance
-        if distance < MIN_DISTANCE:				# Set our social distance threshold - If they meet this condition then..
+        if distance < min_dist:				# Set our social distance threshold - If they meet this condition then..
             if id1 not in red_zone:
                 red_zone[id1] = p1[0:2]   
             if id2 not in red_zone:
                 red_zone[id2] = p2[0:2]
                 
-        if distance < MIN_DISTANCE+30:
+        if distance < min_dist+30:
             if id1 not in yellow_zone:
                 yellow_zone[id1] = p1[0:2]   
             if id2 not in yellow_zone:
                 yellow_zone[id2] = p2[0:2]
     return red_zone, yellow_zone
 
+def zone_detector(centroid_dict, min_dist=MIN_DISTANCE):
+    ce = centroid_dict
+    zone = {x: 0 for x in ce.keys()}
+    for (id1, p1), (id2, p2) in combinations(ce.items(), 2):
+        distance = cal_distance(p1[:2], p2[:2]) 
+        if distance < min_dist:	
+            zone[id1] += 1
+            zone[id2] += 1  
+    c = [(0,255,0), (255,255,0), (255,0,0)]
+    # l = ['Closer to 0', 'Closer to < 4', 'Closer to > 4']
+
+    # zone = {x: ((y, c[0], ce[x][:2]) if y==0  else (c[1]) if y < 4 else (c[2])) for x, y in zone.items()}
+    zone = {x: ((y, c[0], ce[x][:2]) if y==0 else
+                (y, c[1], ce[x][:2]) if y<3 else
+                (y, c[2], ce[x][:2])) 
+                for x, y in zone.items()}
+    return zone
 # ==================================Plotting=============================================
+def plot_zone(centroid_dict, min_dist, img):
+    "Function for plotting the respective zone to the person distance"
+    zone = zone_detector(centroid_dict, min_dist)
+    for idx, values in zone.items():
+        color = values[1]
+        x, y = values[2]
+        cv2.circle(img, (x, y), 5, color, -1)
+    return img, zone
+
 def bbox(red_zone, centroid_dict, img):
     """Function for plotting bounding box around detected person"""
     for idx, box in centroid_dict.items():  
@@ -132,21 +158,23 @@ def riskLine(zones, img):
                 cv2.line(img, start_point, end_point, color[i], 2)      # Only above the threshold lines are displayed. 
     return img
 
-def plotImg(centroid_dict, img):
-    red_zone, yellow_zone = violation(centroid_dict)
+def plotImg(centroid_dict, min_dist, img):
+    red_zone, yellow_zone = violation(centroid_dict, min_dist)
 
-    ##plot bounding box
-    img = bbox(red_zone, centroid_dict, img)
-    # print('config img bbox', type(img))
+    ## plot bounding box
+    # img = bbox(red_zone, centroid_dict, img)
+
+    ## plot zone dots
+    img, zone = plot_zone(centroid_dict, min_dist, img)
+
     ## summary      
     text = "People at Risk: %s" % str(len(red_zone))
     location = (10,25)
     cv2.putText(img, text, location, cv2.FONT_HERSHEY_SIMPLEX, 1, (246,86,86), 2, cv2.LINE_AA) 
     
     ## plot lines
-    img = riskLine([red_zone, yellow_zone], img)
-    # print('config img riskline', type(img))
+    # img = riskLine([red_zone, yellow_zone], img)
 
-    return img
+    return img, zone
 
 # =======================================================================================

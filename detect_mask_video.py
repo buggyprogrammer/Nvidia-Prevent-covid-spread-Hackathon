@@ -80,8 +80,8 @@ def detect_and_predict_mask(frame, faceNet, maskNet):
 	return (locs, preds)
 
 def mask_plot(locs, preds, frame_resized):
-	# loop over the detected face locations and their corresponding
-	# locations
+	# loop over the detected face locations and their corresponding locations
+	mask_count = {'Mask': 0, 'No Mask':0}
 	for (box, pred) in zip(locs, preds):
 		# unpack the bounding box and predictions
 		(startX, startY, endX, endY) = box
@@ -91,6 +91,9 @@ def mask_plot(locs, preds, frame_resized):
 		label = "Mask" if mask > withoutMask else "No Mask"
 		color = (0, 255, 0) if label == "Mask" else (0, 0, 255)
 
+		# update mask count
+		mask_count[label] += 1
+
 		# include the probability in the label
 		# label = "{}: {:.2f}%".format(label, max(mask, withoutMask) * 100)
 
@@ -98,7 +101,7 @@ def mask_plot(locs, preds, frame_resized):
 		cv2.putText(frame_resized, label, (startX, startY - 10),
 			cv2.FONT_HERSHEY_SIMPLEX, 0.45, color, 2)
 		cv2.rectangle(frame_resized, (startX, startY), (endX, endY), color, 2)
-	return
+	return mask_count
 
 def predict_mask(output, show_frame, video=0):
 	if type(video) is int:

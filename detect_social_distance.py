@@ -10,7 +10,7 @@ NMS_THRESH = 0.3
 
 # define the minimum safe distance (in pixels) that two people can be
 # from each other
-MIN_DISTANCE = 90
+MIN_DISTANCE = 150
 
 
 # =============Pretrained Model==============================
@@ -117,9 +117,9 @@ def social_distancing_thread(output, video=0, show_frame=1):
         # processing frame
         frame_rgb = cv2.cvtColor(frame_read, cv2.COLOR_BGR2RGB)
         frame_resized = cv2.resize(frame_rgb, (frame_width, frame_height), interpolation=cv2.INTER_LINEAR)
-        detect = detect_people(frame_resized, net, ln, personIdx=LABELS.index("person"))
-        image = plotImg(detect, frame_resized)
-        # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        detect = detect_people(frame_resized, net, ln, personIdx=LABELS.index("person"),  min_conf=MIN_CONF, nms_thre=NMS_THRESH)
+        image, zone = plotImg(centroid_dict=detect, min_dist= MIN_DISTANCE, img=frame_resized)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
         # display frame
         if show_frame > 0:
@@ -147,5 +147,5 @@ def social_distancing_thread(output, video=0, show_frame=1):
 if __name__ == "__main__":
     # social_distancing(video=0, show_frame=1,
     #                   output='test_output_cv.avi')
-    social_distancing_thread(video=0, show_frame=1,
+    social_distancing_thread(video='1.mp4', show_frame=1,
                              output='test_output_thread.avi')
