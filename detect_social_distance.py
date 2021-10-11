@@ -95,11 +95,10 @@ def social_distancing_thread(output, video=0, show_frame=1):
     # video meta data
     frame_width = int(cap.stream.get(3))
     frame_height = int(cap.stream.get(4))
-    new_height, new_width = frame_height // 2, frame_width // 2
+ 
+   # output details
+    out = cv2.VideoWriter(output, cv2.VideoWriter_fourcc(*"MJPG"), 10.0, (frame_width, frame_height))
 
-    # output details
-    out = cv2.VideoWriter(output, cv2.VideoWriter_fourcc(*"MJPG"), 10.0, (new_width, new_height))
-    
     fps = FPS().start()
    # loops through all frames
     while True:
@@ -117,7 +116,7 @@ def social_distancing_thread(output, video=0, show_frame=1):
 
         # processing frame
         frame_rgb = cv2.cvtColor(frame_read, cv2.COLOR_BGR2RGB)
-        frame_resized = cv2.resize(frame_rgb, (new_width, new_height), interpolation=cv2.INTER_LINEAR)
+        frame_resized = cv2.resize(frame_rgb, (frame_width, frame_height), interpolation=cv2.INTER_LINEAR)
         detect = detect_people(frame_resized, net, ln, personIdx=LABELS.index("person"))
         image = plotImg(detect, frame_resized)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -146,7 +145,7 @@ def social_distancing_thread(output, video=0, show_frame=1):
     print("[INFO] Approx. FPS: {:.2f}".format(fps.fps()))
 
 if __name__ == "__main__":
-    social_distancing(video='pedestrians.mp4', show_frame=0,
+    social_distancing(video='mask1.avi', show_frame=1,
                       output='test_output_cv.avi')
-    social_distancing_thread(video=0, show_frame=1,
-                             output='test_output_thread.avi')
+    # social_distancing_thread(video='mask1.avi', show_frame=1,
+    #                          output='test_output_thread.avi')
