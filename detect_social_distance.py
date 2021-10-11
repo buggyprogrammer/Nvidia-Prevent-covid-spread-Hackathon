@@ -32,7 +32,7 @@ ln = [ln[i[0] - 1] for i in net.getUnconnectedOutLayers()]
 
 # ===================Video Input OpenCV=================================
 def social_distancing(output, video=0, show_frame=1):
-    print("[INFO] sampling frames from without threading...")
+    print("[INFO] sampling frames from webcam...")
     cap = cv2.VideoCapture(video)
 
     # video meta data
@@ -43,7 +43,6 @@ def social_distancing(output, video=0, show_frame=1):
     # output details
     out = cv2.VideoWriter(output, cv2.VideoWriter_fourcc(*"MJPG"), 10.0, (new_width, new_height))
     
-    # fps counter
     fps = FPS().start()
     # loops through all frames
     while True:
@@ -87,10 +86,7 @@ def social_distancing(output, video=0, show_frame=1):
 # ===================Video Input Threading==============================
 def social_distancing_thread(output, video=0, show_frame=1):
     print("[INFO] sampling frames from webcam using thread...")
-    if video != 0:
-        cap = FileVideoStream(video).start()
-    else: 
-        cap = WebcamVideoStream(src=0)
+    cap = WebcamVideoStream(src=video).start()
 
     # video meta data
     frame_width = int(cap.stream.get(3))
@@ -100,21 +96,15 @@ def social_distancing_thread(output, video=0, show_frame=1):
     # output details
     out = cv2.VideoWriter(output, cv2.VideoWriter_fourcc(*"MJPG"), 10.0, (new_width, new_height))
     
-    # fps counter
     fps = FPS().start()
    # loops through all frames
     while True:
-        frame_read = cap.read()
+        frame_read, ret = cap.read(), cap.grabbed
 
         # Check if frame present 
-        if video != 0:
-            if cap.more() != True:
-                print('failed to grab frame')
-                break
-        else:
-            if cap.grabbed != True:
-                print('failed to grab frame')
-                break                
+        if not ret:
+            print('failed to grab frame')
+            break
 
         # processing frame
         frame_rgb = cv2.cvtColor(frame_read, cv2.COLOR_BGR2RGB)
@@ -135,11 +125,11 @@ def social_distancing_thread(output, video=0, show_frame=1):
 
         # writing changes
         out.write(image)
-
-    cv2.destroyAllWindows()
+    
     out.release()
     cap.stop()
     fps.stop()
+    cv2.destroyAllWindows()
 
     # output message
     print(":::Video Write Completed")
@@ -147,7 +137,7 @@ def social_distancing_thread(output, video=0, show_frame=1):
     print("[INFO] Approx. FPS: {:.2f}".format(fps.fps()))
 
 if __name__ == "__main__":
-    # social_distancing(video='input_&_ouput\pedestrians.mp4', show_frame=1,
-    #                   output='test_output_cv.avi')
+    social_distancing(video='pedestrians.mp4', show_frame=0,
+                      output='test_output_cv.avi')
     social_distancing_thread(video=0, show_frame=1,
                              output='test_output_thread.avi')
