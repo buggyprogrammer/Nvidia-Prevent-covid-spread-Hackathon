@@ -162,5 +162,6 @@ def predict_mask(output, show_frame, video=0):
 	# do a bit of cleanup
 	cv2.destroyAllWindows()
 	cap.stop()
-
-predict_mask(video='mask1.avi', output='mask2.avi', show_frame=1)
+	
+if __name__ == "__main__":
+	predict_mask(video='mask1.avi', output='mask2.avi', show_frame=1)
