@@ -2,7 +2,7 @@
 from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
 from tensorflow.keras.preprocessing.image import img_to_array
 from tensorflow.keras.models import load_model
-from imutils.video import FPS
+from imutils.video import WebcamVideoStream, FileVideoStream, FPS
 import numpy as np
 import imutils
 import time
@@ -79,13 +79,14 @@ def detect_and_predict_mask(frame, faceNet, maskNet):
 	# locations
 	return (locs, preds)
 
-def plotbbox(locs, preds, frame):
+def mask_plot(locs, preds, frame_resized):
+	# loop over the detected face locations and their corresponding
+	# locations
 	for (box, pred) in zip(locs, preds):
 		# unpack the bounding box and predictions
 		(startX, startY, endX, endY) = box
 		(mask, withoutMask) = pred
 
-		# determine the class label and color we'll use to draw
 		# the bounding box and text
 		label = "Mask" if mask > withoutMask else "No Mask"
 		color = (0, 255, 0) if label == "Mask" else (0, 0, 255)
@@ -94,66 +95,72 @@ def plotbbox(locs, preds, frame):
 		# label = "{}: {:.2f}%".format(label, max(mask, withoutMask) * 100)
 
 		# display the label and bounding box rectangle on the output
-		# frame
-		cv2.putText(frame, label, (startX, startY - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.45, color, 2)
-		cv2.rectangle(frame, (startX, startY), (endX, endY), color, 2)
-	return frame
+		cv2.putText(frame_resized, label, (startX, startY - 10),
+			cv2.FONT_HERSHEY_SIMPLEX, 0.45, color, 2)
+		cv2.rectangle(frame_resized, (startX, startY), (endX, endY), color, 2)
+	return
 
-def predict_mask(output, video=0, show_frame=1):	
-	print("[INFO] starting video stream...")
-	cap = cv2.VideoCapture(video)
-
-	# video meta data
-	frame_width = int(cap.get(3))
-	frame_height = int(cap.get(4))
-	new_height, new_width = frame_height // 2, frame_width // 2
-
-	# output details
-	out = cv2.VideoWriter(output, cv2.VideoWriter_fourcc(*"MJPG"), 10.0, (new_width, new_height))
-
-	# fps counter
-	fps = FPS().start()
-	# loops through all frames	
-	while True:
-		ret, frame_read = cap.read()
+def predict_mask(output, show_frame, video=0):
+	if type(video) is int:
+		print("[INFO] sampling frames from webcam using thread...")
+		cap = WebcamVideoStream(src=video).start()
+	else:
+		print("[INFO] sampling frames from video file using thread...")
+		cap = FileVideoStream(video, queue_size=256).start()
 	
-		# Check if frame present 
-		if not ret:
-			print('failed to grab frame')
-			break
+	# video meta data
+	frame_width = int(cap.stream.get(3))
+	frame_height = int(cap.stream.get(4))
+ 
+   # output details
+	out = cv2.VideoWriter(output, cv2.VideoWriter_fourcc(*"MJPG"), 10.0, (frame_width, frame_height))
+	
+	fps = FPS().start()
+	# loop over the frames from the video stream
+	while True:
+		frame = cap.read()
 
-		# face mask or not
-				
+		# Check if frame present 
+		if type(video) == int:
+			if cap.grabbed==False:
+				print('failed to grab frame')
+				break
+		else: 
+			if cap.more() == False:
+				print('failed to grab frame')
+				break
+
 		# processing frame
-		frame_rgb = cv2.cvtColor(frame_read, cv2.COLOR_BGR2RGB)
-		frame_resized = cv2.resize(frame_rgb, (new_width, new_height), interpolation=cv2.INTER_LINEAR)
-		(locs, preds) = detect_and_predict_mask(frame_read, faceNet, maskNet)
-		image = plotbbox(locs, preds, frame_resized)
-		image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+		frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+		frame_resized = cv2.resize(frame, (frame_width, frame_height), interpolation=cv2.INTER_LINEAR)
+		(locs, preds) = detect_and_predict_mask(frame_resized, faceNet, maskNet)
+		mask_plot(locs, preds, frame_resized)
 
 		# display frame
 		if show_frame > 0:
-			cv2.imshow("Output Frames", image)
+			cv2.imshow("Output Frames", frame_resized)
 			key = cv2.waitKey(1) & 0xFF
 			if key == ord("q"):
-			   break 
-		
+				break
+
 		# update the FPS counter
 		fps.update()
 
 		# writing changes
-		out.write(image)
-		
+		out.write(frame_resized)
+	
 	out.release()
-	cap.release()
+	cap.stop()
 	fps.stop()
 	cv2.destroyAllWindows()
 
 	# output message
 	print(":::Video Write Completed")
 	print("[INFO] Elasped time: {:.2f}".format(fps.elapsed()))
-	print("[INFO] Approx. FPS: {:.2f}".format(fps.fps()))
+	print("[INFO] Approx. FPS: {:.2f}".format(fps.fps()))				
 
-if __name__ == "__main__":
-	predict_mask(video=0, show_frame=1,
-					   output='test_output_cv.avi')
+	# do a bit of cleanup
+	cv2.destroyAllWindows()
+	cap.stop()
+
+predict_mask(video='mask1.avi', output='mask2.avi', show_frame=1)
