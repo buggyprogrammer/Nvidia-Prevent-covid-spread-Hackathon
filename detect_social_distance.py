@@ -85,8 +85,12 @@ def social_distancing(output, video=0, show_frame=1):
 
 # ===================Video Input Threading==============================
 def social_distancing_thread(output, video=0, show_frame=1):
-    print("[INFO] sampling frames from webcam using thread...")
-    cap = WebcamVideoStream(src=video).start()
+    if type(video) is int:
+        print("[INFO] sampling frames from webcam using thread...")
+        cap = WebcamVideoStream(src=video).start()
+    else:
+        print("[INFO] sampling frames from video file using thread...")
+        cap = FileVideoStream(video, queue_size=256).start()
 
     # video meta data
     frame_width = int(cap.stream.get(3))
@@ -99,12 +103,17 @@ def social_distancing_thread(output, video=0, show_frame=1):
     fps = FPS().start()
    # loops through all frames
     while True:
-        frame_read, ret = cap.read(), cap.grabbed
+        frame_read = cap.read()
 
         # Check if frame present 
-        if not ret:
-            print('failed to grab frame')
-            break
+        if type(video) == int:
+            if cap.grabbed==False:
+                print('failed to grab frame')
+                break
+        else: 
+            if cap.more() == False:
+                print('failed to grab frame')
+                break
 
         # processing frame
         frame_rgb = cv2.cvtColor(frame_read, cv2.COLOR_BGR2RGB)
