@@ -15,7 +15,7 @@ weightsPath = r"face_detector\res10_300x300_ssd_iter_140000.caffemodel"
 faceNet = cv2.dnn.readNet(prototxtPath, weightsPath)
 
 # load the face mask detector model from disk
-maskNet = load_model("mask_detector.model")
+maskNet = load_model(r"face_detector\mask_detector.model")
 
 def detect_and_predict_mask(frame, faceNet, maskNet):
 	# grab the dimensions of the frame and then construct a blob
@@ -167,4 +167,4 @@ def predict_mask(output, show_frame, video=0):
 	cap.stop()
 	
 if __name__ == "__main__":
-	predict_mask(video='mask1.avi', output='mask2.avi', show_frame=1)
+	predict_mask(video='1.mp4', output='mask2.avi', show_frame=1)

@@ -128,7 +128,7 @@ def plot_zone(centroid_dict, min_dist, img):
     for idx, values in zone.items():
         color = values[1]
         x, y = values[2]
-        cv2.circle(img, (x, y), 5, color, -1)
+        cv2.circle(img, (x, y), 7, color, -1)
     return img, zone
 
 def bbox(red_zone, centroid_dict, img):
