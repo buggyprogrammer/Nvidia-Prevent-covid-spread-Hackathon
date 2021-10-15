@@ -1,6 +1,7 @@
 from detect_mask_video import *
 from detect_social_distance import *
 import pandas as pd
+import pyttsx3
 
 # ======================Requirement Mask===================================
 # load our serialized face detector model from disk
@@ -55,8 +56,11 @@ def mask_social(output, video=0, show_frame=1):
  
    # output details
     out = cv2.VideoWriter(output, cv2.VideoWriter_fourcc(*"MJPG"), 10.0, (frame_width, frame_height))
+    zone_data = pd.DataFrame()
+    mask_data = pd.DataFrame()
 
     fps = FPS().start()
+    annouced = 20 # make announcement after this number of frame
    # loops through all frames
     while True:
         frame_read = cap.read()
@@ -77,22 +81,42 @@ def mask_social(output, video=0, show_frame=1):
        
         ## social distancing detection
         detect = detect_people(frame_resized, net, ln, personIdx=LABELS.index("person"),  min_conf=MIN_CONF, nms_thre=NMS_THRESH)
-        image, zone_data = plotImg(centroid_dict=detect, min_dist= MIN_DISTANCE, img=frame_resized)
+        image, zone = plotImg(centroid_dict=detect, min_dist= MIN_DISTANCE, img=frame_resized)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
         ## detect mask
         (locs, preds) = detect_and_predict_mask(image, faceNet, maskNet)
-        mask_data = mask_plot(locs, preds, image)
+        mask = mask_plot(locs, preds, image)
 
-        # print(zone_data)
-        # print(mask_data)
-        
+        # update dataframe
+        zone_color = {'red':0, 'yellow':0, 'green':0}
+        for i, y in zone.items():
+            color = y[1]
+            
+            # convert rgb code to color
+            b = {(0,255,0):'green', (255,255,0):'yellow', (255,0,0):'red'}
+
+            c = {(0,255,0), (255,255,0), (255,0,0)}
+            zone_color[b[color]] += 1
+
+        zone_data = zone_data.append(zone_color, ignore_index=True)
+        mask_data = mask_data.append(mask, ignore_index=True)
+
         # display frame
         if show_frame > 0:
             cv2.imshow("Output Frames", image)
             key = cv2.waitKey(1) & 0xFF
             if key == ord("q"):
                 break
+
+        if zone_color['red'] > 4 and annouced >= 20:
+            # intializing pyttsx3
+            annouced = 0
+            alert_v()
+            # send_mail(zone_color, image) # send email
+
+        annouced += 1
+        
 
         # update the FPS counter
         fps.update()
@@ -110,11 +134,11 @@ def mask_social(output, video=0, show_frame=1):
     print("[INFO] Elasped time: {:.2f}".format(fps.elapsed()))
     print("[INFO] Approx. FPS: {:.2f}".format(fps.fps()))
     
-    # export analytics data                                                    
-    pd.DataFrame.from_dict(data=zone_data, orient='index').to_csv('zone_data.csv', header=False)
-    pd.DataFrame.from_dict(data=mask_data, orient='index').to_csv('mask_data.csv', header=False)
+    # # # export analytics data                                                    
+    zone_data.to_csv(r'input_&_ouput\data\zone_data.csv', index=False)
+    mask_data.to_csv(r'input_&_ouput\data\mask_data.csv', index=False)
 
 if __name__ == "__main__":
     # Analyze a video 
-    mask_social(video=0, show_frame=1, output='test_output_t.avi')
+    mask_social(video= r'input_&_ouput\videos\3.mp4', show_frame=1, output= r'input_&_ouput\videos\test_output_t.avi')
     

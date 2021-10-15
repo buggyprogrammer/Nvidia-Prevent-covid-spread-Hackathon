@@ -5,8 +5,16 @@ import os
 import cv2
 import numpy as np
 import time
+import pyttsx3
 from itertools import combinations
 from random import randrange
+
+# email
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.base import MIMEBase
+from email import encoders
 
 # =============================Default Values==========================================
 # initialize minimum probability to filter weak detections along with
@@ -116,9 +124,9 @@ def zone_detector(centroid_dict, min_dist=MIN_DISTANCE):
     # l = ['Closer to 0', 'Closer to < 4', 'Closer to > 4']
 
     # zone = {x: ((y, c[0], ce[x][:2]) if y==0  else (c[1]) if y < 4 else (c[2])) for x, y in zone.items()}
-    zone = {x: ((y, c[0], ce[x][:2]) if y==0 else
-                (y, c[1], ce[x][:2]) if y<3 else
-                (y, c[2], ce[x][:2])) 
+    zone = {x: ((y, c[0], ce[x][-2:]) if y==0 else
+                (y, c[1], ce[x][-2:]) if y<3 else
+                (y, c[2], ce[x][-2:])) 
                 for x, y in zone.items()}
     return zone
 # ==================================Plotting=============================================
@@ -167,6 +175,8 @@ def plotImg(centroid_dict, min_dist, img):
     ## plot zone dots
     img, zone = plot_zone(centroid_dict, min_dist, img)
 
+    # preprocess zone for output
+    
     ## summary      
     text = "People at Risk: %s" % str(len(red_zone))
     location = (10,25)
@@ -177,4 +187,81 @@ def plotImg(centroid_dict, min_dist, img):
 
     return img, zone
 
-# =======================================================================================
+# =====================================Additional=====================================
+def alert_v():
+    # intializing pyttsx3
+    engine = pyttsx3.init()
+    voice_id = engine.getProperty("voices")[1].id
+    engine.setProperty('voice', voice_id)
+
+    text = 'Please maintain the social distance'
+    engine.say(text)
+    engine.runAndWait()
+
+def send_mail(details, frame):
+    fromaddr = "example@gmail.com"
+    toaddr = "exmaple@gmail.com"
+
+    # instance of MIMEMultipart
+    msg = MIMEMultipart()
+
+    # storing the senders email address
+    msg['From'] = fromaddr
+
+    # storing the receivers email address
+    msg['To'] = toaddr
+
+    # storing the subject
+    msg['Subject'] = "Social Distancing alert"
+
+    # string to store the body of the mail
+    body = f"""
+    Hey, Aman the camera has detected 
+    {details['red']} people in red zone
+    {details['yellow']} people in yellow zone and
+    {details['green']} people in green zone.
+    You may want to take some action"""
+
+    # attach the body with the msg instance
+    cv2.imwrite(r'input_&_ouput\Images\snapshot.jpg', frame)
+    msg.attach(MIMEText(body, 'plain'))
+
+    # open the file to be sent
+    filename = r"input_&_ouput\Images\snapshot.jpg"
+    attachment = open(filename, "rb")
+
+    # instance of MIMEBase and named as p
+    p = MIMEBase('application', 'octet-stream')
+
+    # To change the payload into encoded form
+    p.set_payload((attachment).read())
+
+    # encode into base64
+    encoders.encode_base64(p)
+
+    p.add_header('Content-Disposition', "attachment; filename= %s" % filename)
+
+    # attach the instance 'p' to instance 'msg'
+    msg.attach(p)
+
+    # creates SMTP session
+    s = smtplib.SMTP('smtp.gmail.com', 587)
+
+    # start TLS for security
+    s.starttls()
+
+    # Authentication
+    s.login(fromaddr, "")
+
+    # Converts the Multipart msg into a string
+    text = msg.as_string()
+
+    # sending the mail
+    s.sendmail(fromaddr, toaddr, text)
+
+    # terminating the session
+    s.quit()
+
+
+if __name__ == '__main__':
+    alert_v()
