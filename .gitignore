@@ -1,3 +1,2 @@
-face_detector/
-yolo_coco/
 __pycache__/
+yolov4.weights
