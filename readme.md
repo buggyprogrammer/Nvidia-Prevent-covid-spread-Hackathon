@@ -5,7 +5,7 @@
 - `Team` → Data Pirates🏴‍☠️
 - `Hackathon Details` → [Details\_\_](https://gpuhackathons.org/index.php/event/india-academia-connect-ai-hackathon)
 
-This project is the 2nd stage of Nvidia's Hackathon. Check out the 1st stage project **[here](https://github.com/buggyprogrammer/Nvidia-Hindi)**
+This is the 2nd round project of Nvidia's Hackathon. Check out the 1st round project **[here](https://github.com/buggyprogrammer/Nvidia-Hindi)**
 
 **GO TO:** [`Problem Description`](#ProblemDescription)
 [`Library Used`](#Requirements) [`Team Member`](#Team-members)
@@ -66,7 +66,7 @@ We have used yolov4 for detecting people and measuring social distance, for that
 
 Also, for face and mask detection we followed the Balaji Srinivasan [tutorial](https://www.youtube.com/watch?v=Ax6P93r32KU&t=835s&ab_channel=BalajiSrinivasan) and his [repository](https://github.com/balajisrinivas/Face-Mask-Detection). But as I mentioned above, this mask detector is not performing well for far away face so we will be modifying it soon.
 
-For the libraries requirement part you can follow uploaded requirement.txt
+For the libraries requirement part you can follow uploaded [requirement.txt](https://github.com/buggyprogrammer/Prevent-covid-spread/blob/master/readme.md)
 
 ## Team Members
 
