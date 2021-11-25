@@ -7,7 +7,7 @@
 
 This is the 2nd round project of Nvidia's Hackathon. Check out the 1st round project **[here](https://github.com/buggyprogrammer/Nvidia-Hindi)**
 
-**GO TO:** [`Problem Description`](#ProblemDescription)
+**GO TO:** [`Problem Description`](#ProblemDescription) [`Project Overview`](#ProjectOverview) [`Setup`](#Setup)
 [`Library Used`](#Requirements) [`Team Member`](#Team-members)
 
 ---
