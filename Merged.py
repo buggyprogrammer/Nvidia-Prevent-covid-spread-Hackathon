@@ -30,7 +30,7 @@ ln = net.getLayerNames()
 ln = [ln[i[0] - 1] for i in net.getUnconnectedOutLayers()]
 
 # ===================Variable from Social Distancing=======================
-## thresholds
+# thresholds
 # initialize minimum probability to filter weak detections along with
 # the threshold when applying non-maxima suppression
 MIN_CONF = 0.3
@@ -41,6 +41,8 @@ NMS_THRESH = 0.3
 MIN_DISTANCE = 90
 
 # =====================Combined model prediction===========================
+
+
 def mask_social(output, video=0, show_frame=1):
     # video input
     if type(video) is int:
@@ -53,50 +55,54 @@ def mask_social(output, video=0, show_frame=1):
     # video meta data
     frame_width = int(cap.stream.get(3))
     frame_height = int(cap.stream.get(4))
- 
+
    # output details
-    out = cv2.VideoWriter(output, cv2.VideoWriter_fourcc(*"MJPG"), 10.0, (frame_width, frame_height))
+    out = cv2.VideoWriter(output, cv2.VideoWriter_fourcc(
+        *"MJPG"), 10.0, (frame_width, frame_height))
     zone_data = pd.DataFrame()
     mask_data = pd.DataFrame()
 
     fps = FPS().start()
-    annouced = 20 # make announcement after this number of frame
+    annouced = 20  # make announcement after this number of frame
    # loops through all frames
     while True:
         frame_read = cap.read()
 
-        # Check if frame present 
+        # Check if frame present
         if type(video) == int:
-            if cap.grabbed==False:
+            if cap.grabbed == False:
                 print('failed to grab frame')
                 break
-        else: 
+        else:
             if cap.more() == False:
                 print('failed to grab frame')
                 break
-    
+
         # processing frame
         frame_rgb = cv2.cvtColor(frame_read, cv2.COLOR_BGR2RGB)
-        frame_resized = cv2.resize(frame_rgb, (frame_width, frame_height), interpolation=cv2.INTER_LINEAR)
-       
-        ## social distancing detection
-        detect = detect_people(frame_resized, net, ln, personIdx=LABELS.index("person"),  min_conf=MIN_CONF, nms_thre=NMS_THRESH)
-        image, zone = plotImg(centroid_dict=detect, min_dist= MIN_DISTANCE, img=frame_resized)
+        frame_resized = cv2.resize(
+            frame_rgb, (frame_width, frame_height), interpolation=cv2.INTER_LINEAR)
+
+        # social distancing detection
+        detect = detect_people(frame_resized, net, ln, personIdx=LABELS.index(
+            "person"),  min_conf=MIN_CONF, nms_thre=NMS_THRESH)
+        image, zone = plotImg(centroid_dict=detect,
+                              min_dist=MIN_DISTANCE, img=frame_resized)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-        ## detect mask
+        # detect mask
         (locs, preds) = detect_and_predict_mask(image, faceNet, maskNet)
         mask = mask_plot(locs, preds, image)
 
         # update dataframe
-        zone_color = {'red':0, 'yellow':0, 'green':0}
+        zone_color = {'red': 0, 'yellow': 0, 'green': 0}
         for i, y in zone.items():
             color = y[1]
-            
-            # convert rgb code to color
-            b = {(0,255,0):'green', (255,255,0):'yellow', (255,0,0):'red'}
 
-            c = {(0,255,0), (255,255,0), (255,0,0)}
+            # convert rgb code to color
+            b = {(0, 255, 0): 'green', (255, 255, 0): 'yellow', (255, 0, 0): 'red'}
+
+            c = {(0, 255, 0), (255, 255, 0), (255, 0, 0)}
             zone_color[b[color]] += 1
 
         zone_data = zone_data.append(zone_color, ignore_index=True)
@@ -116,14 +122,13 @@ def mask_social(output, video=0, show_frame=1):
             # send_mail(zone_color, image) # send email
 
         annouced += 1
-        
 
         # update the FPS counter
         fps.update()
 
         # writing changes
         out.write(image)
-    
+
     out.release()
     cap.stop()
     fps.stop()
@@ -133,12 +138,13 @@ def mask_social(output, video=0, show_frame=1):
     print(":::Video Write Completed")
     print("[INFO] Elasped time: {:.2f}".format(fps.elapsed()))
     print("[INFO] Approx. FPS: {:.2f}".format(fps.fps()))
-    
-    # # # export analytics data                                                    
+
+    # # # export analytics data
     zone_data.to_csv(r'input_&_ouput\data\zone_data.csv', index=False)
     mask_data.to_csv(r'input_&_ouput\data\mask_data.csv', index=False)
 
+
 if __name__ == "__main__":
-    # Analyze a video 
-    mask_social(video= r'input_&_ouput\videos\3.mp4', show_frame=1, output= r'input_&_ouput\videos\test_output_t.avi')
-    
+    # Analyze a video
+    mask_social(video=r'input_&_ouput\videos\1.mp4', show_frame=1,
+                output=r'input_&_ouput\videos\test_output_t1.avi')
