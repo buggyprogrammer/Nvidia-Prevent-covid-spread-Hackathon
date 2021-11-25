@@ -3,12 +3,11 @@
 - `Goal` → Create a model that detects any social activities that can lead to covid spread.
 - `Rank` → **7th**
 - `Team` → Data Pirates🏴‍☠️
-- `Hackathon Details` → [Details\_\_](https://gpuhackathons.org/index.php/event/india-academia-connect-ai-hackathon)
+- `Hackathon Details` → [Details](https://gpuhackathons.org/index.php/event/india-academia-connect-ai-hackathon)
 
 This is the 2nd round project of Nvidia's Hackathon. Check out the 1st round project **[here](https://github.com/buggyprogrammer/Nvidia-Hindi)**
 
-**GO TO:** [`Problem Description`](#ProblemDescription) [`Project Overview`](#ProjectOverview) [`Setup`](#Setup)
-[`Library Used`](#Requirements) [`Team Member`](#Team-members)
+**GO TO:** [`Problem Description`](#ProblemDescription) [`Project Overview`](#Project-Overview) [`Setup`](#Setup) [`Team Member`](#Team-members)
 
 ---
 
