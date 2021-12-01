@@ -74,4 +74,4 @@ For the libraries requirement part you can follow uploaded [requirement.txt](htt
 |:-|
 |[Animesh Singh](https://github.com/animeshdebug7)|
 |[Aishwarya Kshirsagar](https://github.com/AishwaryaKshirsagar)|
-|[Darkstar](https://github.com/DarkstarDream) (me)|
+|[Aman Kumar Verma](https://github.com/buggyprogrammer) (me)|
