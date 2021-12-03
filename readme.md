@@ -61,7 +61,7 @@ We have used yolov4 for detecting people and measuring social distance, for that
 
 - yolov4.cfg
 - coco.names
-- yolov4.weights (you have to download this manually from here, as github doesn't allow to upload large files)
+- yolov4.weights (you have to download this manually from [here](https://drive.google.com/open?id=1cewMfusmPjYWbrnuJRuKhPMwRe_b9PaT), as github doesn't allow to upload large files)
 
 Also, for face and mask detection we followed the Balaji Srinivasan [tutorial](https://www.youtube.com/watch?v=Ax6P93r32KU&t=835s&ab_channel=BalajiSrinivasan) and his [repository](https://github.com/balajisrinivas/Face-Mask-Detection). But as I mentioned above, this mask detector is not performing well for far away face so we will be modifying it soon.
 
